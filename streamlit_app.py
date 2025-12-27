@@ -9,7 +9,7 @@ import io
 import os
 import tempfile
 import zipfile
-from Extractor import InvoiceDataExtractor
+# from Extractor import InvoiceDataExtractor
 from huggingface_hub import InferenceClient
 import pdfplumber
 import traceback
