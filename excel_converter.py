@@ -56,12 +56,24 @@ class ExcelToJSONConverter:
                         # But wait, what if a col is in BOTH? (rare, usually inconsistent)
             else:
                 # Fallback to automatic variance detection
+                # We use a "Global Variance" strategy:
+                # If a column varies in ANY group (invoice) in the entire file, it is considered a Line Item Column.
+
+                # Pre-calculate line columns (doing this once per convert call is efficient enough)
+                if 'detected_line_cols' not in locals():
+                    detected_line_cols = set()
+                    for c in df.columns:
+                        if c == unique_key: 
+                            continue
+                        # Check if max unique values in any group > 1
+                        if df.groupby(unique_key)[c].nunique(dropna=False).max() > 1:
+                            detected_line_cols.add(c)
+
                 for col in df.columns:
-                    unique_vals = group[col].apply(lambda x: str(x) if x is not None else "None").unique()
-                    if len(unique_vals) == 1:
-                        header_cols.append(col)
-                    else:
+                    if col in detected_line_cols:
                         line_cols.append(col)
+                    else:
+                        header_cols.append(col)
             
             # Build Header (from first row)
             first_row = rows[0]
